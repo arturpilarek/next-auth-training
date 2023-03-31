@@ -1,7 +1,11 @@
-import { hashPassword } from "../../lib/auth"
-import { clientPromise } from "../../lib/mongodb"
+import { hashPassword } from "../../../lib/auth"
+import { connectToDatabase } from "../../../lib/mongodb"
 
 async function handler(req, res) {
+  if (req.method !== "POST") {
+    return
+  }
+
   const { email, password } = req.body
 
   if (
@@ -10,18 +14,23 @@ async function handler(req, res) {
     !password ||
     password.trim().length < 7
   ) {
-    res
-      .status(422)
-      .json({
-        message:
-          "Invalid input - password should be at least 7 characters long.",
-      })
+    res.status(422).json({
+      message: "Invalid input - password should be at least 7 characters long.",
+    })
     return
   }
 
-  const client = await clientPromise()
+  const client = await connectToDatabase()
 
   const db = client.db("next-auth-training")
+
+  const existingUser = await db.collection("users").findOne({ email: email })
+
+  if (existingUser) {
+    res.status(422).json({ message: "User exists already!" })
+    client.close()
+    return
+  }
 
   const hashedPassword = await hashPassword(password)
 
