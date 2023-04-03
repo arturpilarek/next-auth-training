@@ -3,7 +3,7 @@ import Providers from "next-auth/providers"
 
 import { verifyPassword } from "../../../lib/auth"
 import { connectToDatabase } from "../../../lib/mongodb"
-
+ 
 export default NextAuth({
   session: {
     jwt: true,
